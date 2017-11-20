@@ -177,3 +177,28 @@ MatrixXd Ht = H.transpose();
 // KF Prediction step
     x = F * x + u ;
     P = F * P * F.transpose() + Q ;
+
+
+		float dt2 = (dt * dt);
+    float dt3 = (dt2 * dt);
+    float dt4 = (dt3 * dt);
+
+
+		//1. Modify the F matrix so that the time is integrated
+		kf_.F_ << 1, 0, dt, 0,
+				      0, 1, 0, dt,
+				      0, 0, 1, 0,
+				      0, 0, 0, 1;
+
+		//2. Set the process covariance matrix Q
+		kf_.Q_ = MatrixXd(4, 4);
+		kf_.Q_ << (1/4) * dt4 * noise_ax, 0, (1/2) * dt3 * noise_ax, 0,
+	0,                    (1/4) * dt4 * noise_ay, 0, (1/2) * dt3 * noise_ay,
+	(1/2) * dt3 * noise_ax, 0, dt2 * noise_ax, 0,
+	0,                    (1/2) * dt3 * noise_ay, 0, dt2 * noise_ay ;
+
+
+kf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+			 0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
+			 dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
+			 0, dt_3/2*noise_ay, 0, dt_2*noise_ay;

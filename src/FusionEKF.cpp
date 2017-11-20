@@ -48,7 +48,7 @@ FusionEKF::~FusionEKF() {}
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   int noise_ax = 9 ;
-  int noise_ay = 9 ; 
+  int noise_ay = 9 ;
   cout << "ProcessMeasurement" << endl;
   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
   previous_timestamp_ = measurement_pack.timestamp_;
@@ -104,6 +104,24 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         			  0, 1, 0, 0,
         			  0, 0, 1000, 0,
         			  0, 0, 0, 1000;
+
+
+
+      // //measurement matrix
+      // ekf_.H_ = MatrixXd(4, 4);
+      // ekf_.H_ << 1, 0, 0, 0,
+      //            0, 1, 0, 0,
+      //            0, 0, 1, 0,
+      //            0, 0, 0, 1;
+      //measurement matrix
+      ekf_.H_ = MatrixXd(2, 4);
+      ekf_.H_ << 1, 0, 0, 0,
+                 0, 1, 0, 0;
+
+      //measurement covariance
+      ekf_.R_ = MatrixXd(2, 2);
+      ekf_.R_ << 0.0225, 0,
+                 0, 0.0225;
       // ekf_.init();
 
     }
@@ -138,10 +156,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the state and covariance matrices.
    */
 
+
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
   } else {
     // Laser updates
+    ekf_.Update(measurement_pack.raw_measurements_) ;
   }
 
   // print the output

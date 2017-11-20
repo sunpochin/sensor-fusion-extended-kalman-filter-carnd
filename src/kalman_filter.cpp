@@ -31,14 +31,14 @@ void KalmanFilter::Predict() {
   cout << "KalmanFilter::Predict()" << endl ;
 
   cout << "x_ = F_ * x_;" << endl ;
-  cout << "x_ :" << x_ ;
-  cout << "F_ :" << F_ ;
-  cout << "P_ :" << P_ ;
-  cout << "Q_ :" << Q_ ;
+  cout << "x_ :" << x_ << endl ;
+  cout << "F_ :" << F_ << endl ;
+  cout << "P_ :" << P_ << endl ;
+  cout << "Q_ :" << Q_ << endl ;
   x_ = F_ * x_;
 	MatrixXd Ft = F_.transpose();
 	P_ = F_ * P_ * Ft + Q_;
-  cout << "P_ :" << P_ ;
+  cout << "P_ :" << P_ << endl ;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
@@ -49,12 +49,18 @@ void KalmanFilter::Update(const VectorXd &z) {
   cout << "KalmanFilter::Update()" << endl ;
 
   VectorXd z_pred = H_ * x_;
+  cout << "z_pred :" << z_pred << endl;
+  cout << "z :" << z << endl;
 	VectorXd y = z - z_pred;
+  cout << "y :" << y  << endl;
 	MatrixXd Ht = H_.transpose();
 	MatrixXd S = H_ * P_ * Ht + R_;
+  cout << "S :" << S  << endl;
 	MatrixXd Si = S.inverse();
 	MatrixXd PHt = P_ * Ht;
+  cout << "PHt :" << PHt  << endl;
 	MatrixXd K = PHt * Si;
+  cout << "K :" << K  << endl;
 
 	 //new estimate
 	x_ = x_ + (K * y);
