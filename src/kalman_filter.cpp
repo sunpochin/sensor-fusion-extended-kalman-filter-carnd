@@ -1,9 +1,12 @@
+#include <iostream>
+using namespace std;
+
 #include "kalman_filter.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-// Please note that the Eigen library does not initialize 
+// Please note that the Eigen library does not initialize
 // VectorXd or MatrixXd objects with zeros upon creation.
 
 KalmanFilter::KalmanFilter() {}
@@ -25,6 +28,17 @@ void KalmanFilter::Predict() {
   TODO:
     * predict the state
   */
+  cout << "KalmanFilter::Predict()" << endl ;
+
+  cout << "x_ = F_ * x_;" << endl ;
+  cout << "x_ :" << x_ ;
+  cout << "F_ :" << F_ ;
+  cout << "P_ :" << P_ ;
+  cout << "Q_ :" << Q_ ;
+  x_ = F_ * x_;
+	MatrixXd Ft = F_.transpose();
+	P_ = F_ * P_ * Ft + Q_;
+  cout << "P_ :" << P_ ;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
@@ -32,6 +46,21 @@ void KalmanFilter::Update(const VectorXd &z) {
   TODO:
     * update the state by using Kalman Filter equations
   */
+  cout << "KalmanFilter::Update()" << endl ;
+
+  VectorXd z_pred = H_ * x_;
+	VectorXd y = z - z_pred;
+	MatrixXd Ht = H_.transpose();
+	MatrixXd S = H_ * P_ * Ht + R_;
+	MatrixXd Si = S.inverse();
+	MatrixXd PHt = P_ * Ht;
+	MatrixXd K = PHt * Si;
+
+	 //new estimate
+	x_ = x_ + (K * y);
+	long x_size = x_.size();
+	MatrixXd I = MatrixXd::Identity(x_size, x_size);
+	P_ = (I - K * H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -39,4 +68,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   TODO:
     * update the state by using Extended Kalman Filter equations
   */
+  cout << "KalmanFilter::UpdateEKF()" << endl ;
+
+
 }
