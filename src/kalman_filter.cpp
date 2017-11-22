@@ -1,6 +1,9 @@
 #include <iostream>
-using namespace std;
+// #define _USE_MATH_DEFINES
+// #include <math.h>
+// #define M_PI (3.14159265358979323846)
 
+using namespace std;
 #include "kalman_filter.h"
 
 using Eigen::MatrixXd;
@@ -77,5 +80,70 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   */
   cout << "KalmanFilter::UpdateEKF()" << endl ;
 
+  // Predicted location in polar coordinates.
+  float px = x_(0);
+  float py = x_(1);
+  float vx = x_(2);
+  float vy = x_(3);
 
+  // prevent divide by zero
+  float eps = 0.000001;
+  if (fabs(px) < eps ) {
+    px = eps;
+  }
+  if (fabs(py) < eps ) {
+    py = eps;
+  }
+
+  // from lecture: "Tips and Tricks"
+  // Normalizing Angles
+  // In C++, atan2() returns values between -pi and pi. When calculating phi in y = z - h(x) for radar measurements,
+  // the resulting angle phi in the y vector should be adjusted so that it is between -pi and pi.
+  // The Kalman filter is expecting small angle values between the range -pi and pi.
+  // HINT: when working in radians, you can add 2π or subtract 2π until the angle is within the desired range.
+
+  // Avoid Divide by Zero throughout the Implementation
+  // Before and while calculating the Jacobian matrix Hj, make sure your code avoids dividing by zero. For example, both the x and y values might be zero or px*px + py*py might be close to zero. What should be done in those cases?
+  // rho: ρ , phi: ϕ,
+  // range: rho, radial distance from origin.
+  float rho = sqrtf(powf(px, 2) + powf(py, 2));
+  // bearing: phi, angle between rho and x.
+  float phi = atan2f(py, px);
+//  float phi = atan2f(vy, vx);
+  cout << "phi : " << phi << endl;
+  // radial velocity: change of rho (range rate)
+  float rho_dot = (px * vx + py * vy) / rho;
+
+  // measurement function h(x')
+  VectorXd hofx(3);
+  hofx << rho, phi, rho_dot;
+
+  // Intermediate calculations.
+  MatrixXd Ht = H_.transpose();
+  // MatrixXd Ht = hx.transpose();
+  VectorXd y = z - hofx;
+  cout << "rho :" << rho  << endl;
+  cout << "H_ :" << H_ << endl;
+  cout << "hofx :" << hofx << endl;
+  cout << "y :" << y << endl;
+  float PI = 3.14159265358979323846;
+  if (y(1) > PI) {
+    y(1) = y(1) - 2 * PI;
+  }
+  if (y(1) < -1 * PI) {
+    y(1) = y(1) + 2 * PI;
+  }
+  cout << "P_ :" << P_ << endl;
+  cout << "R_ :" << R_ << endl;
+  cout << "H_ * P_ * Ht :" << H_ * P_ * Ht << endl;
+
+  MatrixXd S = H_ * P_ * Ht + R_;
+  cout << "S :" << S << endl;
+  MatrixXd K = P_ * Ht * S.inverse();
+  long size = x_.size();
+  MatrixXd I = MatrixXd::Identity(size, size);
+
+  // Update state and covariance mats.
+  x_ = x_ + K * y;
+  P_ = (I - K * H_) * P_;
 }

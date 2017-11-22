@@ -20,6 +20,7 @@ FusionEKF::FusionEKF() {
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
+  cout << "H_laser_: " << endl << H_laser_ << endl;
   Hj_ = MatrixXd(3, 4);
 
   //measurement covariance matrix - laser
@@ -49,8 +50,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   int noise_ax = 9 ;
   int noise_ay = 9 ;
-  // cout << "ProcessMeasurement" << endl;
+  // todo, long long or float?
   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+  cout << "dt :" << dt << endl;
   previous_timestamp_ = measurement_pack.timestamp_;
   float dt_2 = dt * dt;
   float dt_3 = dt_2 * dt;
@@ -72,14 +74,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ << 1, 1, 1, 1;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      /**
-      Convert radar from polar to cartesian coordinates and initialize state.
-      */
+      // Convert radar from polar to cartesian coordinates and initialize state.
+      cout << "RADAR : measurement_pack.raw_measurements_ : " << measurement_pack.raw_measurements_;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      /**
-      Initialize state.
-      */
+      // Initialize state.
       cout << "measurement_pack :" << endl ;
       // cout << "measurement_pack :" << measurement_pack.raw_measurements_ << endl ;
       ekf_.F_ = MatrixXd(4, 4) ;
@@ -88,43 +87,27 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                 0, 0, 1, 0,
                 0, 0, 0, 1 ;
 
-
       //set the process covariance matrix Q
       ekf_.Q_ = MatrixXd(4, 4);
-      ekf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
-              			   0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
-              			   dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
-              			   0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
-      // ekf_.Q_ <<  0, 0, 0, 0,
-      //             0, 0, 0, 0,
-      //             0, 0, 0, 0,
-      //             0, 0, 0, 0 ;
-
+      // ekf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+      //         			   0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
+      //         			   dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
+      //         			   0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
+      ekf_.Q_ <<  0, 0, 0, 0,
+                  0, 0, 0, 0,
+                  0, 0, 0, 0,
+                  0, 0, 0, 0 ;
       // todo , P_ init is not correct?
       ekf_.P_ = MatrixXd(4, 4);
       ekf_.P_ << 1, 0, 0, 0,
         			  0, 1, 0, 0,
         			  0, 0, 1000, 0,
         			  0, 0, 0, 1000;
-
-
-      // //measurement matrix
-      // ekf_.H_ = MatrixXd(4, 4);
-      // ekf_.H_ << 1, 0, 0, 0,
-      //            0, 1, 0, 0,
-      //            0, 0, 1, 0,
-      //            0, 0, 0, 1;
-      //measurement matrix
-      // ekf_.H_ = MatrixXd(2, 4);
-      // ekf_.H_ << 1, 0, 0, 0,
-      //            0, 1, 0, 0;
-      //
-      // //measurement covariance
-      // ekf_.R_ = MatrixXd(2, 2);
-      // ekf_.R_ << 0.0225, 0,
-      //            0, 0.0225;
+      // measurement matrix
+      ekf_.H_ = MatrixXd(2, 4);
+      ekf_.H_ << 1, 0, 0, 0,
+                 0, 1, 0, 0;
       // ekf_.init();
-
     }
 
     // done initializing, no need to predict or update
@@ -166,15 +149,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the state and covariance matrices.
    */
 
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-    // ekf_.R_ = R_radar_;
-    // ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
-    // ekf_.Update(measurement_pack.raw_measurements_) ;
+    ekf_.R_ = R_radar_;
+    ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.UpdateEKF(measurement_pack.raw_measurements_) ;
+
   } else {
     // Laser updates
     ekf_.R_ = R_laser_;
+    // H_laser_ is not init. with a value? so I don't use it.
     ekf_.H_ = H_laser_;
     ekf_.Update(measurement_pack.raw_measurements_) ;
   }
