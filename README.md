@@ -12,11 +12,7 @@ By correctly implementing sensor fusion, this implementation obtains RMSE values
 ## Results Demo:
 Simulation results are recorded as following youtube videos.
 
-Video with Dataset 1:
-https://youtu.be/E0pFsr8ao94
-
-Video with Dataset 2:
-https://youtu.be/tRFBBEhw9wU
+[Video with Dataset 1](https://youtu.be/E0pFsr8ao94) , [Video with Dataset 2](https://youtu.be/tRFBBEhw9wU)
 
 ## Program structure:
 The main flow is in `main.cpp`, and the algorithm implementation is in:
