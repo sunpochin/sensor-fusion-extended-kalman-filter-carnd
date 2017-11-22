@@ -35,9 +35,9 @@ The main flow is in `main.cpp`, and the algorithm implementation is in:
 ![alt text][image4]
 
 ## Setting up and Usage
-1. git clone this repository.
-2. Install `uWebSocketIO`. By running `install-ubuntu.sh` or `install-mac.sh`
-3. Build main program:
+* git clone this repository.
+* Install `uWebSocketIO`. By running `install-ubuntu.sh` or `install-mac.sh`
+* Build main program:
   Once the install for uWebSocketIO is complete, the main program can be built and run by doing the following from the project top directory.
  1. mkdir build
  2. cd build
@@ -45,4 +45,4 @@ The main flow is in `main.cpp`, and the algorithm implementation is in:
  4. make
  5. ./ExtendedKF
 
-4. Download and run simulator: This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
+* Download and run simulator: This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
