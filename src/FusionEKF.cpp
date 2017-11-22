@@ -8,6 +8,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+
 /*
  * Constructor.
  */
@@ -17,28 +18,32 @@ FusionEKF::FusionEKF() {
   previous_timestamp_ = 0;
 
   // initializing matrices
-  R_laser_ = MatrixXd(2, 2);
-  R_radar_ = MatrixXd(3, 3);
-  H_laser_ = MatrixXd(2, 4);
-  cout << "H_laser_: " << endl << H_laser_ << endl;
-  Hj_ = MatrixXd(3, 4);
 
   //measurement covariance matrix - laser
+  R_laser_ = MatrixXd(2, 2);
   R_laser_ << 0.0225, 0,
         0, 0.0225;
-
-  //measurement covariance matrix - radar
+        //measurement covariance matrix - radar
+  R_radar_ = MatrixXd(3, 3);
   R_radar_ << 0.09, 0, 0,
         0, 0.0009, 0,
         0, 0, 0.09;
+  H_laser_ = MatrixXd(2, 4);
+  // quote: "Another reason could be improper initialization of matrices.
+  // Doing MatrixXd(3, 3) will fill the matrix with random values.
+  // Always remember to initialize to zero by doing MatrixXd::Zero(3, 3) or matrix.fill(0.0)."
+  // in my case, I forgot to assign values to H_laser :(
+  H_laser_ << 1, 0, 0, 0,
+              0, 1, 0, 0 ;
+
+  // cout << "H_laser_: " << endl << H_laser_ << endl;
+  Hj_ = MatrixXd(3, 4);
 
   /**
-  TODO:
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
-  // but I can't set noise here, it should be set in ProcessMeasurement() as local var.
-
+  // But I can't set noises here, it should be set in ProcessMeasurement() as local var.
   cout << "FusionEKF constructor " << endl;
 }
 
@@ -48,7 +53,6 @@ FusionEKF::FusionEKF() {
 FusionEKF::~FusionEKF() {}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
-
   float noise_ax = 9 ;
   float noise_ay = 9 ;
   // todo, long long or float?
@@ -74,15 +78,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 1, 1;
 
-
-
     // cout << "measurement_pack :" << measurement_pack.raw_measurements_ << endl ;
     ekf_.F_ = MatrixXd(4, 4) ;
-    ekf_.F_ << 1, 0, 1, 0,
-              0, 1, 0, 1,
-              0, 0, 1, 0,
-              0, 0, 0, 1 ;
-
+    ekf_.F_ << 1, 0, 0, 0,
+               0, 1, 0, 0,
+               0, 0, 1, 0,
+               0, 0, 0, 1 ;
     // //set the process covariance matrix Q
     // ekf_.Q_ = MatrixXd(4, 4);
     // ekf_.Q_ <<  0, 0, 0, 0,
@@ -117,7 +118,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       double vx = 0.0;
       double vy = 0.0;
       ekf_.x_ <<  px, py, vx, vy;
-
     }
 
     // done initializing, no need to predict or update
@@ -125,28 +125,26 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     return;
   }
 
-  // Update the state transition matrix F according to the new elapsed time.
-  cout << " ekf_.F_ :" << ekf_.F_ << endl ;
-  ekf_.F_(0, 2) = dt;
-  ekf_.F_(1, 3) = dt;
-  cout << " dt :" << dt << endl ;
-  ekf_.Q_ = MatrixXd(4, 4);
-  ekf_.Q_ << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
-             0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
-             dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
-             0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
-
   /*****************************************************************************
    *  Prediction
    ****************************************************************************/
 
   /**
-   TODO:
      * Update the state transition matrix F according to the new elapsed time.
       - Time is measured in seconds.
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+  //  cout << " ekf_.F_ :" << ekf_.F_ << endl ;
+   ekf_.F_(0, 2) = dt;
+   ekf_.F_(1, 3) = dt;
+  //  cout << " dt :" << dt << endl ;
+
+   ekf_.Q_ = MatrixXd(4, 4);
+   ekf_.Q_ << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+              0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
+              dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
+              0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
 
   ekf_.Predict();
 
