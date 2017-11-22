@@ -8,7 +8,6 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-
 /*
  * Constructor.
  */
@@ -77,6 +76,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 1, 1;
+    // why is it 1, 1, 1, 1 ???
 
     // cout << "measurement_pack :" << measurement_pack.raw_measurements_ << endl ;
     ekf_.F_ = MatrixXd(4, 4) ;
@@ -90,7 +90,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //             0, 0, 0, 0,
     //             0, 0, 0, 0,
     //             0, 0, 0, 0 ;
-    // todo , P_ init is not correct?
+    // todo , why P_ init as 1000 ?
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
@@ -98,16 +98,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
               0, 0, 0, 1000;
     // ekf_.init();
 
+    // CRITERIA: Your Kalman Filter algorithm handles the first measurements appropriately.
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // Convert radar from polar to cartesian coordinates and initialize state.
       cout << "RADAR : measurement_pack.raw_measurements_ : " << measurement_pack.raw_measurements_;
       double rho = measurement_pack.raw_measurements_(0);
       double phi = measurement_pack.raw_measurements_(1);
-      double rhodot = measurement_pack.raw_measurements_(2);
+      double rho_dot = measurement_pack.raw_measurements_(2);
       double px = cos(phi) * rho;
       double py = sin(phi) * rho;
-      double vx = cos(phi) * rhodot;
-      double vy = sin(phi) * rhodot;
+      double vx = cos(phi) * rho_dot;
+      double vy = sin(phi) * rho_dot;
       ekf_.x_ <<  px, py, vx, vy;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
@@ -139,36 +140,33 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ekf_.F_(0, 2) = dt;
    ekf_.F_(1, 3) = dt;
   //  cout << " dt :" << dt << endl ;
-
    ekf_.Q_ = MatrixXd(4, 4);
    ekf_.Q_ << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
               0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
               dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
               0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
 
+  // CRITERIA: Your Kalman Filter algorithm first predicts then updates.
   ekf_.Predict();
 
   /*****************************************************************************
    *  Update
    ****************************************************************************/
-
   /**
-   TODO:
      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
    */
 
+  // CRITERIA: Your Kalman Filter can handle radar and lidar measurements.
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
     ekf_.R_ = R_radar_;
     Hj_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = Hj_;
     ekf_.UpdateEKF(measurement_pack.raw_measurements_) ;
-
   } else {
     // Laser updates
     ekf_.R_ = R_laser_;
-    // H_laser_ is not init. with a value? so I don't use it.
     ekf_.H_ = H_laser_;
     ekf_.Update(measurement_pack.raw_measurements_) ;
   }
