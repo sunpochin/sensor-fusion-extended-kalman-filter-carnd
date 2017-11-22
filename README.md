@@ -42,3 +42,11 @@ The main flow is in `main.cpp`, and the algorithm implementation is in:
  5. ./ExtendedKF
 
 * Download and run simulator: This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
+
+## Reflection:
+* `H_laser_` should be properly initialized, otherwise it will be filled up with random value, causing RMSE larger than 0.2 .
+
+* When dealing with Radar data, angle should be normalized, as in
+`void KalmanFilter::UpdateEKF(const VectorXd &z)`
+`VectorXd y = z - hofx;`
+Otherwise the estimation will goes wrong like this [video](https://www.youtube.com/watch?v=zyGwjFlBIpI) .
